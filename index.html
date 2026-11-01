@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Trading AI">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <title>Mobile Trading AI</title>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">МОБИЛЬНЫЙ АНАЛИТИК</div>
+        <h1>Trading AI</h1>
+      </div>
+      <span class="status"><i></i> Демо-режим</span>
+    </header>
+
+    <section class="panel settings">
+      <div class="section-head"><h2>Параметры сканирования</h2><span class="tag">MVP</span></div>
+      <div class="settings-grid">
+        <div><small>Рынок</small><strong>USDT Perpetual</strong></div>
+        <div><small>Монеты</small><strong>Top 20</strong></div>
+        <div><small>Таймфреймы</small><strong>5m · 15m · 1h · 4h</strong></div>
+        <div><small>Порог сигнала</small><strong>85 / 100</strong></div>
+        <div><small>Профиль риска</small><strong>Balanced</strong></div>
+        <div><small>Макс. плечо</small><strong>10x</strong></div>
+      </div>
+      <button id="scanBtn" class="primary">Запустить демонстрацию</button>
+      <p class="hint">Сейчас используются только примеры интерфейса. Рыночные данные и сигналы ещё не подключены.</p>
+    </section>
+
+    <section class="summary-row">
+      <div class="mini-card"><small>Найдено сигналов</small><strong id="signalCount">0</strong></div>
+      <div class="mini-card"><small>Монет в сканере</small><strong>20</strong></div>
+      <div class="mini-card"><small>Риск на сделку</small><strong>0,5%</strong></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Результаты анализа</h2><span class="muted" id="scanState">Ожидание</span></div>
+      <div id="results" class="empty">
+        <div class="empty-icon">⌁</div>
+        <strong>Анализ ещё не запускался</strong>
+        <p>Нажми кнопку выше, чтобы посмотреть демонстрационный вид результатов.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Правила безопасности</h2></div>
+      <ul class="rules">
+        <li>Только сильные сигналы с баллом от 85/100.</li>
+        <li>У каждого сигнала должны быть Stop Loss и Take Profit.</li>
+        <li>Плечо до 10x — ограничение, а не цель.</li>
+        <li>Сделки открываются пользователем вручную.</li>
+        <li>При недостатке подтверждений сигнал не показывается.</li>
+      </ul>
+    </section>
+
+    <footer>Mobile Trading AI · Прототип MVP · Не является торговым советом</footer>
+  </main>
+  <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+    }
+  </script>
+</body>
+</html>
