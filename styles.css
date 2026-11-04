@@ -1,3 +1,4 @@
+
 * {
   box-sizing: border-box;
 }
@@ -320,63 +321,7 @@ h2 {
   margin-top: 10px;
 }
 
-/* Правила безопасности и нижняя часть */
-
-.rules {
-  padding-left: 19px;
-  margin: 14px 0 0;
-  color: #c1cee0;
-  font-size: 12px;
-  line-height: 1.8;
-}
-
-footer {
-  text-align: center;
-  font-size: 10px;
-  padding: 8px 12px 0;
-}
-
-@media (min-width: 600px) {
-  .app {
-    padding-top: 36px;
-  }
-
-  .settings-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
 /* Технический анализ монет */
-
-.coin-analysis {
-  padding: 0 0 13px 32px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 4px;
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.analysis-heading {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-  color: var(--text);
-}
-
-.analysis-timeframe {
-  display: grid;
-  grid-template-columns: 45px 1fr 65px;
-  gap: 8px;
-  padding: 4px 0;
-}
-
-.analysis-note {
-  display: block;
-  margin-top: 7px;
-  color: var(--muted);
-}
-
-/* Улучшенные карточки технического анализа */
 
 .coin-analysis {
   padding: 14px 0 18px 32px;
@@ -516,12 +461,30 @@ footer {
   overflow-wrap: anywhere;
 }
 
-.positive {
-  color: var(--green);
+/* Правила безопасности и нижняя часть */
+
+.rules {
+  padding-left: 19px;
+  margin: 14px 0 0;
+  color: #c1cee0;
+  font-size: 12px;
+  line-height: 1.8;
 }
 
-.negative {
-  color: var(--red);
+footer {
+  text-align: center;
+  font-size: 10px;
+  padding: 8px 12px 0;
+}
+
+@media (min-width: 600px) {
+  .app {
+    padding-top: 36px;
+  }
+
+  .settings-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 380px) {
@@ -529,12 +492,17 @@ footer {
     padding-left: 20px;
   }
 
+  .analysis-timeframe {
+    grid-template-columns: 35px 1fr 62px;
+    gap: 5px;
+  }
+
   .analysis-indicators {
     grid-template-columns: 1fr 1fr;
   }
 
-  .analysis-timeframe {
-    grid-template-columns: 35px 1fr 62px;
-    gap: 5px;
+  .market-row {
+    grid-template-columns: 20px minmax(55px, 1fr) minmax(90px, 1.2fr) auto;
+    gap: 6px;
   }
 }
