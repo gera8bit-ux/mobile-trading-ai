@@ -463,11 +463,16 @@ async function requestGeminiAnalysis(marketData, triggerReason) {
     throw new Error("Worker вернул ответ, который не является JSON");
   }
 
-  if (!response.ok || data.ok === false) {
-    throw new Error(
-      data.error || data.message || `Ошибка Worker: ${response.status}`
-    );
-  }
+  
+if (!response.ok || data.ok === false) {
+  const errorMessage =
+    data.details
+      ? `${data.error || "Ошибка Worker"}: ${data.details}`
+      : data.error || data.message || `Ошибка Worker: ${response.status}`;
+
+  throw new Error(errorMessage);
+}
+
 
   const decisions = normalizeGeminiResponse(data);
 
