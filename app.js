@@ -19,7 +19,7 @@ const ALLOWED_STRATEGIES = [
   "Momentum",
   "Momentum + Funding",
   "Multi-Indicator Confluence",
-  "Funding/Cash-and-Carry",
+  "Funding / Cash-and-Carry",
   "Low-Leverage Trend Following",
   "Range Trading",
   "Mean Reversion",
@@ -929,11 +929,10 @@ async function loadMarket(triggerReason = "manual_scan") {
 
     renderResults(marketData, decisions);
 
-    const candidateCount = decisions.filter(item =>
-      item.direction !== "NONE" &&
-      number(item.confidence) >= SIGNAL_THRESHOLD &&
-      item.tradeAllowed === true
-    ).length;
+    const candidateCount = decisions.filter(item => {
+  const checked = validateDecision(item, marketData);
+  return checked.appTradeAllowed === true;
+}).length;
 
     state.textContent =
       `Готово · ${marketData.length} монет · ${candidateCount} идей`;
