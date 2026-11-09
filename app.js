@@ -438,65 +438,113 @@ function normalizeGeminiResponse(response) {
   return decisions;
 }
 
+
 async function requestGeminiAnalysis(marketData, triggerReason) {
-  const payload = {
-    marketData,
-    strategyMode: getStrategyMode(),
-    previousAnalysis: loadPreviousAnalysis(),
-    openPositions: [],
-    triggerReason
-  };
+  const BATCH_SIZE = 5;
+  const allDecisions = [];
+  const previousAnalysis = loadPreviousAnalysis();
 
-  const response = await fetch(`${WORKER_URL}/analyze`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
+  for (let start = 0; start < marketData.length; start += BATCH_SIZE) {
+    const batch = marketData.slice(start, start + BATCH_SIZE);
+    const batchNumber = Math.floor(start / BATCH_SIZE) + 1;
+    const totalBatches = Math.ceil(marketData.length / BATCH_SIZE);
 
-  let data;
+    console.log(
+      `Gemini: пакет ${batchNumber}/${totalBatches}, монет: ${batch.length}`
+    );
 
-  try {
-    data = await response.json();
-  } catch {
-    throw new Error("Worker вернул ответ, который не является JSON");
-  }
+    const payload = {
+      marketData: batch,
+      strategyMode: getStrategyMode(),
+      previousAnalysis,
+      openPositions: [],
+      triggerReason
+    };
 
-  
-if (!response.ok || data.ok === false) {
-  const errorMessage =
-    data.details
-      ? `${data.error || "Ошибка Worker"}: ${data.details}`
-      : data.error || data.message || `Ошибка Worker: ${response.status}`;
+    const response = await fetch(`${WORKER_URL}/analyze`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
 
-  throw new Error(errorMessage);
-}
+    const responseBody = await response.text();
 
+    let data;
 
-  const decisions = normalizeGeminiResponse(data);
-
-  if (decisions.length !== marketData.length) {
-    throw new Error("Количество решений Gemini не совпадает с количеством монет");
-  }
-
-  const symbols = new Set(marketData.map(item => item.symbol));
-  const received = new Set();
-
-  for (const decision of decisions) {
-    if (!decision || !symbols.has(decision.symbol)) {
-      throw new Error("Gemini вернул неизвестный символ");
+    try {
+      data = JSON.parse(responseBody);
+    } catch {
+      throw new Error(
+        `Пакет ${batchNumber}/${totalBatches}: Worker вернул не-JSON. ` +
+        `HTTP ${response.status}: ${responseBody.slice(0, 500)}`
+      );
     }
 
-    if (received.has(decision.symbol)) {
-      throw new Error("Gemini вернул повторяющийся символ");
+    if (!response.ok || data.ok === false) {
+      const details = typeof data.details === "string"
+        ? data.details
+        : JSON.stringify(data.details || data);
+
+      throw new Error(
+        `Пакет ${batchNumber}/${totalBatches}: ` +
+        `${data.error || "Ошибка Worker"}: ${details}`
+      );
     }
 
-    received.add(decision.symbol);
+    const decisions = normalizeGeminiResponse(data);
+
+    if (decisions.length !== batch.length) {
+      throw new Error(
+        `Пакет ${batchNumber}: получено ${decisions.length} решений ` +
+        `вместо ${batch.length}. Анализ отклонён.`
+      );
+    }
+
+    const symbols = new Set(batch.map(item => item.symbol));
+    const received = new Set();
+
+    for (const decision of decisions) {
+      if (!decision || !symbols.has(decision.symbol)) {
+        throw new Error(
+          `Пакет ${batchNumber}: Gemini вернул неизвестный символ`
+        );
+      }
+
+      if (received.has(decision.symbol)) {
+        throw new Error(
+          `Пакет ${batchNumber}: повторяющийся символ ${decision.symbol}`
+        );
+      }
+
+      received.add(decision.symbol);
+    }
+
+    allDecisions.push(...decisions);
   }
 
-  return decisions;
+  if (allDecisions.length !== marketData.length) {
+    throw new Error(
+      "Общий анализ неполный. Все решения не получены."
+    );
+  }
+
+  const finalSymbols = new Set(allDecisions.map(item => item.symbol));
+
+  if (finalSymbols.size !== marketData.length) {
+    throw new Error(
+      "Общий анализ содержит повторяющиеся символы."
+    );
+  }
+
+  console.log(
+    `Gemini: успешно получено ${allDecisions.length} решений`
+  );
+
+  return allDecisions;
 }
+
 
 function validateDecision(decision, marketData) {
   const market = marketData.find(item => item.symbol === decision.symbol);
