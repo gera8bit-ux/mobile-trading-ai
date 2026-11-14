@@ -1,6 +1,6 @@
 
 const BYBIT_URL = "https://api.bybit.com/v5/market";
-const WORKER_URL = "https://crimson-sea-06c2.gera8bit.workers.dev";
+const WORKER_URL = "https://mobile-trading-ai-workflows.gera8bit.workers.dev";
 
 const SIGNAL_THRESHOLD = 85;
 const MAX_LEVERAGE = 10;
