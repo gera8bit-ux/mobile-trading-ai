@@ -493,7 +493,94 @@ async function requestGeminiAnalysis(marketData, triggerReason) {
       );
     }
 
-    const decisions = normalizeGeminiResponse(data);
+        let resultData = data;
+
+    // Worker запускает анализ асинхронно.
+    // Ждём завершения Workflow и получаем результат.
+    if (!Array.isArray(data?.analysis?.decisions)) {
+      const instanceId = data.instanceId;
+
+      if (!instanceId) {
+        throw new Error(
+          `Пакет ${batchNumber}: Worker не вернул instanceId`
+        );
+      }
+
+      console.log(
+        `Gemini: Workflow запущен (${instanceId}). Ожидаем результат...`
+      );
+
+      let completed = false;
+
+      for (let attempt = 1; attempt <= 120; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        const statusResponse = await fetch(
+          `${WORKER_URL}/analyze/status?id=${encodeURIComponent(instanceId)}`
+        );
+
+        const statusText = await statusResponse.text();
+
+        let statusData;
+
+        try {
+          statusData = JSON.parse(statusText);
+        } catch {
+          throw new Error(
+            `Пакет ${batchNumber}: ошибка чтения статуса Workflow. ` +
+            statusText.slice(0, 300)
+          );
+        }
+
+        if (!statusResponse.ok || statusData.ok === false) {
+          throw new Error(
+            `Пакет ${batchNumber}: ошибка проверки Workflow: ` +
+            JSON.stringify(statusData)
+          );
+        }
+
+        const workflowStatus =
+          typeof statusData.status === "string"
+            ? statusData.status
+            : statusData.status?.status;
+
+        if (workflowStatus === "complete") {
+          resultData = statusData.output;
+          completed = true;
+
+          console.log(
+            `Gemini: пакет ${batchNumber}/${totalBatches} завершён`
+          );
+
+          break;
+        }
+
+        if (
+          ["errored", "failed", "terminated"].includes(workflowStatus)
+        ) {
+          throw new Error(
+            `Пакет ${batchNumber}: Workflow завершился с ошибкой: ` +
+            JSON.stringify(statusData)
+          );
+        }
+
+        if (attempt % 6 === 0) {
+          console.log(
+            `Gemini: пакет ${batchNumber}/${totalBatches}, ` +
+            `ожидание результата (${attempt * 5} сек.)`
+          );
+        }
+      }
+
+      if (!completed) {
+        throw new Error(
+          `Пакет ${batchNumber}: превышено время ожидания Workflow. ` +
+          `ID: ${instanceId}`
+        );
+      }
+    }
+
+    const decisions = normalizeGeminiResponse(resultData);
 
     if (decisions.length !== batch.length) {
       throw new Error(
